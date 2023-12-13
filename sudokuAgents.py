@@ -1,7 +1,13 @@
+"""
+sudokuAgents.py
+
+Author: Arjun Phull
+Course: ISTA 450, Fall 2023
+Date: 13 December 2023
+"""
+
+import random, time
 import numpy as np
-import pandas as pd
-import matplotlib.pyplot as plt
-import random, copy, pickle, time
 from tqdm import tqdm
 
 class SudokuGame:
@@ -12,7 +18,7 @@ class SudokuGame:
             board = np.full((9, 9), "_")
 
         self.board = board  # game board
-        self.candidates = dict()  # for use in constraintProp
+        self.candidates = {}  # for use in constraintProp
         self.editableCells = set()  # to keep track of givens versus blanks
 
         # initialize candidates dictionary and editable cells
@@ -64,7 +70,7 @@ class SudokuGame:
         """
         i, j = cell
         return self.board[i][j]
-    
+
     def printBoard(self):
         """Prints the board to the console.
         """
@@ -72,7 +78,7 @@ class SudokuGame:
             for j in i[:-1]:
                 print(f" {j} ", end='')
             print(f" {i[-1]}")
-    
+
     def getWhichSubgrid(self, cell):
         """Given a cell, returns the upper-left corner of the cell's subgrid.
 
@@ -81,7 +87,7 @@ class SudokuGame:
         """
         i, j = cell
         return ((i // 3)*3 , (j // 3)*3)
-    
+
     def conflicts(self, cell, value):
         """Calculates the number of conflicts across rows, columns, and subgrids,
         that result from assigning a value to a cell.
@@ -113,7 +119,7 @@ class SudokuGame:
                     numConflicts += 1
 
         return numConflicts
-    
+
     def totalConflicts(self):
         """Calculates the total number of conflicts on the board.
 
@@ -125,7 +131,7 @@ class SudokuGame:
                 # iterating across the board
                 value = self.board[i][j]
                 total += self.conflicts((i, j), value)
-                
+
         return total
 
     def isComplete(self):
@@ -135,6 +141,7 @@ class SudokuGame:
             for j in range(9):
                 if self.board[i][j] == '_':
                     return False
+
         return True
 
 ## util - for board generation
@@ -220,7 +227,8 @@ def minConflicts(game, maxSteps=1000, plateauThreshold=10, printOutput=True):
 
         game.board[i][j] = "_"
         leastConflicts = min(conflictsFromValues.values())
-        bestValues = [value for value in conflictsFromValues if conflictsFromValues[value] == leastConflicts]
+        bestValues = [value for value in conflictsFromValues \
+                      if conflictsFromValues[value] == leastConflicts]
 
         # randomly break ties
         bestValue = random.choice(bestValues)
@@ -267,7 +275,7 @@ def backtrack(game, step, printOutput):
             print(f"Solution found in {step} steps!")
             game.printBoard()
         return game.board
-    
+
     # otherwise, select the first empty cell
     var = selectEmptyCell(game)
 
@@ -277,7 +285,7 @@ def backtrack(game, step, printOutput):
             if printOutput:
                 print("No possible solution")
         return None
-    
+
     # unpack the cell
     i, j = var
 
@@ -291,7 +299,7 @@ def backtrack(game, step, printOutput):
 
             if result is not None:  # if the assignment was successful
                 return result
-            
+
             # otherwise, backtrack and reset the value to empty
             game.board[i][j] = '_'
 
@@ -313,7 +321,7 @@ def selectEmptyCell(game):
             # iterating across the board
             if game.board[i][j] == '_':
                 emptyCells.append((i, j))
-                
+
     if len(emptyCells) == 0:  # if there are no empty cells
         return None
 
@@ -339,14 +347,14 @@ def constraintProp(game, step=0, printOutput=True):
             print(f"Solution found in {step} steps.")
             game.printBoard()
         return game.board, end - start
-    
+
     # otherwise, use the Minimum Remaining Values heuristic to select an empty cell
     var = selectMRVCell(game)
 
     if var is None:  # if there are no empty cells, there is no solution
         end = time.time()
         return None, end - start
-    
+
     i, j = var  # unpack the chosen cell
     # create a deep copy of the cell's candidates
     originalCandidates = game.candidates[var].copy()
@@ -361,7 +369,7 @@ def constraintProp(game, step=0, printOutput=True):
             # once the solution is found
             end = time.time()
             return game.board, end - start
-        
+
         # otherwise, the assignment led to failure, so backtrack and revert it
         game.board[i][j] = '_'
         game.candidates[var] = originalCandidates
@@ -381,7 +389,8 @@ def selectMRVCell(game):
 
     for cell in game.editableCells:  # iterate across editableCells
         num_candidates = len(game.candidates[cell])  # get the number of candidates
-        if num_candidates < min_candidates and game.getValue(cell) == '_':  # if this cell is empty and has fewer candidates
+        # if this cell is empty and has fewer candidates:
+        if num_candidates < min_candidates and game.getValue(cell) == '_': 
             min_candidates = num_candidates  # log it
             selected_cell = cell  # log it
 
@@ -398,49 +407,9 @@ def updateCandidates(game):
     for cell in [x for x in game.editableCells if game.getValue(x) == '_']:
         # update the cell's candidates
         game.candidates[cell] = game.getCandidates(cell)
-        
+
         # if a cell has no candidates
         if len(game.candidates[cell]) == 0:
             return False
 
     return True
-
-sol1 = np.array([   [5,3,4,6,7,8,9,1,2],
-                    [6,7,2,1,9,5,3,4,8],
-                    [1,9,8,3,4,2,5,6,7],
-                    [8,5,9,7,6,1,4,2,3],
-                    [4,2,6,8,5,3,7,9,1],
-                    [7,1,3,9,2,4,8,5,6],
-                    [9,6,1,5,3,7,2,8,4],
-                    [2,8,7,4,1,9,6,3,5],
-                    [3,4,5,2,8,6,1,7,9]])
-
-board1 = np.array([ [5,3,"_","_",7,"_","_","_","_"],
-                    [6,"_","_",1,9,5,"_","_","_"],
-                    ["_",9,8,"_","_","_","_",6,"_"],
-                    [8,"_","_","_",6,"_","_","_",3],
-                    [4,"_","_",8,"_",3,"_","_",1],
-                    [7,"_","_","_",2,"_","_","_",6],
-                    ["_",6,"_","_","_","_",2,8,"_"],
-                    ["_","_","_",4,1,9,"_","_",5],
-                    ["_","_","_","_",8,"_","_",7,9]])
-
-sol2 = np.array([   [7,8,2,9,1,3,4,5,6],
-                    [1,4,5,8,7,6,9,2,3],
-                    [6,9,3,4,5,2,7,1,8],
-                    [2,7,9,5,3,1,8,6,4],
-                    [5,6,4,2,9,8,1,3,7],
-                    [3,1,8,7,6,4,5,9,2],
-                    [4,5,1,6,2,7,3,8,9],
-                    [9,2,7,3,8,5,6,4,1],
-                    [8,3,6,1,4,9,2,7,5]])
-
-impossible = np.array([ [7,8,"_",9,1,2,4,5,6],
-                    [1,4,5,8,7,6,9,2,3],
-                    [6,9,3,4,5,2,7,1,8],
-                    [2,7,"_",5,3,1,"_",6,4],
-                    [5,6,4,2,9,8,1,3,7],
-                    [3,1,8,7,6,4,5,9,2],
-                    [4,5,1,"_",2,7,3,8,9],
-                    [9,2,7,3,8,5,6,"_",1],
-                    [8,3,6,1,4,9,2,7,5]])

@@ -262,7 +262,7 @@ def backtrackingSearch(game, printOutput=True):
 
 
 def backtrack(game, step, printOutput):
-    """Recursive helper function for backtracking.
+    """Recursive helper function for backtrackingSearch.
 
     :param game: SudokuGame
     :param step: current iteration
@@ -309,7 +309,7 @@ def backtrack(game, step, printOutput):
     return None
 
 def selectEmptyCell(game):
-    """Helper function for backtracking. Returns the first empty cell on the board.
+    """Helper function for backtrackingSearch. Returns the first empty cell on the board.
 
     :param game: SudokuGame
     :return: the position of the first empty cell
